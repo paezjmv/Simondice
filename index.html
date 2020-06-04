@@ -118,6 +118,9 @@
         //Para tener mas visualmente el arranque, agregamos la propiedad hide al css del boton. 
         //La cual, nos permite desaparecer el boton btnEmpezar.
         inicializar() {
+          //Establecemos this en elegirColor con bind para evitar la disparidad del manejador
+          //y que los colores en this sigan siendo la funcion y no el div al elegir el color
+          this.elegirColor = this.elegirColor.bind(this)
           btnEmpezar.classList.add('hide')
           //Indicamos que iniciamos en el nivel 1
           this.nivel = 1
@@ -144,6 +147,8 @@
         //la nueva secuencia
         siguienteNivel() {
           this.iluminarSecuencia()
+          //Con esto vamos a agregar los eventos de click a los botones
+          this.agregarEventosClick()
         }
 
         //Creamos una funcion que transforma un numero a color
@@ -187,7 +192,25 @@
         apagarColor(color) {
           this.colores[color].classList.remove('light')
         }
+
+        agregarEventosClick() {
+          //Le indicaremos que color eligio el usuario por el metodo click
+          /* Gracias a la funcion this.elegirColor que establecimos en inicialiar(), vamos
+          a eliminar que el manejador pise el asincroniscmo con this */
+          this.colores.celeste.addEventListener('click', this.elegirColor)
+          this.colores.violeta.addEventListener('click', this.elegirColor)
+          this.colores.naranja.addEventListener('click', this.elegirColor)
+          this.colores.verde.addEventListener('click', this.elegirColor)
+        }
+
+        //Cuando se agregamos manejadores de evento se manejan parametros
+        //estandarizados como 'ev'
+        elegirColor(ev) {
+          console.log(this)
+        }
       }
+
+
       //1. Establecemos la funcion con la que arrancaremos el juego gracias al onclick
       function empezarJuego(){
         //Guardamos dentro de una variable un nuevo objeto que inicializa la ronda
