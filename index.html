@@ -83,6 +83,11 @@
       .hide {
         display: none;
       }
+
+      * {
+        font-family: 'Arial';
+      }
+
     </style>
   </head>
   <body>
@@ -96,6 +101,8 @@
       <!-- //Encima de ellos, se establece el boton clickeable para empezar a jugar -->
       <button id="btnEmpezar" class="btn-start" onclick="empezarJuego()">Empezar a jugar!</button>
     </div>
+    <!-- Utilizamos Swal para que los alertas sean mas bonitos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
     <script>
     //3. Con estas variables podemos acceder a los div de las pagina y asi poder acceder
     //a la interaccion con ellos. 
@@ -104,12 +111,14 @@
       const naranja = document.getElementById('naranja')
       const verde = document.getElementById('verde')
       const btnEmpezar = document.getElementById('btnEmpezar')
+      //Establecemos cuantos niveles tendra el juego para no entrar en un loop infinito
       const ULTIMO_NIVEL = 10
         
       //2. Creamos la clase a la que pertenece dicho objeto  
       class Juego {
           //Creamos el constructor con la funcion que nos indicara que arrancamos
         constructor() {
+          this.inicializar = this.inicializar.bind(this)
           this.inicializar()
           this.generarSecuencia()
           //Escribimos el constructor para avanzar de nivel
@@ -121,9 +130,10 @@
         inicializar() {
           //Establecemos this en elegirColor con bind para evitar la disparidad del manejador
           //y que los colores en this sigan siendo la funcion y no el div al elegir el color
+          //Al igual con siguienteNivel y evitar que el settimeout pise el windows.
           this.siguienteNivel = this.siguienteNivel.bind(this)
           this.elegirColor = this.elegirColor.bind(this)
-          btnEmpezar.classList.add('hide')
+          this.toggleBtnEmpezar()
           //Indicamos que iniciamos en el nivel 1
           this.nivel = 1
           //Englobamos los colores que estaremos utilizando en la secuencia
@@ -132,6 +142,16 @@
             violeta,
             naranja,
             verde
+          }
+        }
+
+        //Escribimos el metodo para que el boton empezar vuelva a aparecer con cada error o
+        //termino de juego
+        toggleBtnEmpezar() {
+          if (btnEmpezar.classList.contains('hide')) {
+            btnEmpezar.classList.remove('hide')
+          } else {
+            btnEmpezar.classList.add('hide')
           }
         }
 
@@ -148,6 +168,7 @@
         //Creamos la funcion. Cada que se cree un nuevo nivel se iniciara
         //la nueva secuencia
         siguienteNivel() {
+          //Esto se podria entender como "numero de aciertos"
           this.subnivel = 0
           this.iluminarSecuencia()
           //Con esto vamos a agregar los eventos de click a los botones
@@ -229,26 +250,51 @@
         //Cuando se agregamos manejadores de evento se manejan parametros
         //estandarizados como 'ev'
         elegirColor(ev) {
+          //Dentro de los eventos tenemos la opcion de target > dataset, la cual nos refleja
+          //el color elegido por el usuario en el navegador. Es proporcionado gracias a data-color
+          //que establecimos previamente en el div
           const nombreColor = ev.target.dataset.color
+          //Despues transformamos ese color en el numero mencionado. Para poder compararlo despues
           const numeroColor = this.transformarColorANumero(nombreColor)
+          //Lo iluminamos para que el usuario perciba lo que selecciono
           this.iluminarColor(nombreColor)
+          //Ahora si, comparamos el numero de color con la secuencia que se establecio en el nivel
+          //actual
           if (numeroColor === this.secuencia[this.subnivel]) {
             this.subnivel++
             if (this.subnivel === this.nivel) {
               this.nivel++
+              //Se elimina los click de evento, ya que se reinicia un nuevo nivel
               this.eliminarEventosClick()
+              //Comparamos hasta que nivel podria llegar el usuario. Con ello, si gana
               if (this.nivel === (ULTIMO_NIVEL + 1)) {
-                // Gana !!
+                this.ganoElJuego()
               } else {
                 setTimeout(this.siguienteNivel, 1500)
               }
             }
+            //Esta es la logica cuando "pierde" el usuario  
           } else {
-            //Perdio !!
+            this.perdioElJuego()
           }
         }
-      }
 
+        ganoElJuego() {
+          //Swal es una promesa y nos permite realizar funciones despues de ejecutarse
+          swal('Platzi', 'Felicitaciones, ganaste el juego', 'success')
+          //Volvemos a iniciarlizar el juego
+          .then(this.inicializar)
+        }
+
+        perdioElJuego() {
+          swal('Platzi', 'Lo lamentamos, perdiste :(', 'error')
+          .then(() => {
+            this.eliminarEventosClick()
+            this.inicializar()
+          })
+        }
+
+      }
 
       //1. Establecemos la funcion con la que arrancaremos el juego gracias al onclick
       function empezarJuego(){
